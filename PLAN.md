@@ -51,12 +51,12 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 - [ ] Efek getar layar (screen shake) saat game over.
 
 ### Phase 5: Publikasi GitHub Pages
-- [ ] Inisialisasi git dan branch `main`.
-- [ ] Buat repository GitHub publik via GitHub CLI (`gh repo create <repo> --public --source=. --remote=origin --push`). *Wajib berstatus Public agar GitHub Pages gratis dapat aktif.*
-- [ ] Aktifkan GitHub Pages (Metode CLI `gh api` atau manual via Web UI Settings > Pages branch `main` root `/`).
-- [ ] Kompatibilitas Google AI Studio: Sediakan snippet perintah terminal siap salin jika proyek dilanjutkan lewat antarmuka web.
+- [x] Inisialisasi git dan branch `main`.
+- [x] Buat repository GitHub publik via GitHub CLI (`gh repo create gravity-snake --public --source=. --remote=origin --push`).
+- [x] Aktifkan GitHub Pages via CLI `gh api` (branch `main`, path `/`).
+- [x] Live demo: https://fakhri24.github.io/gravity-snake/
 - [ ] Pantau status workflow build di tab Actions (`gh run list`).
-- [ ] Tes live demo (`https://<username>.github.io/<repo>/`) dan pastikan pembaruan langsung tampil tanpa hambatan cache (Zero-Cache test).
+- [ ] Tes live demo dan verifikasi zero-cache setelah build selesai.
 
 ---
 
@@ -70,7 +70,7 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 | **T-03** | Modul Input Username & Leaderboard Top 10 | Phase 2 | `DONE` | AI | LocalStorage CRUD, anti-XSS, tabel peringkat |
 | **T-04** | Logika Pergerakan, Rintangan & Tabrakan | Phase 3 | `DONE` | AI | Gravitasi, wrap horizontal, collision dinding/badan |
 | **T-05** | Efek Suara Synth Web Audio API & Partikel | Phase 4 | `DONE` | AI | Audio sintetis (6 efek); partikel & screen shake belum |
-| **T-06** | Deployment GitHub Pages via GitHub CLI (`gh`) | Phase 5 | `TODO` | AI | Publikasi live & verifikasi zero-cache |
+| **T-06** | Deployment GitHub Pages via GitHub CLI (`gh`) | Phase 5 | `DONE` | AI | Repo: fakhri24/gravity-snake, URL: https://fakhri24.github.io/gravity-snake/ |
 
 *Status: `TODO` | `IN-PROGRESS` | `DONE`*
 
@@ -80,7 +80,7 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 
 | Versi | Tanggal | Pelaksana | Ringkasan Perubahan | Referensi Commit |
 | :--- | :--- | :--- | :--- | :--- |
-| **v0.3.0** | 2026-10-24 | AI | Implementasi Gravity Snake lengkap di index.html (8 blok AGENTS.md), LocalStorage leaderboard, audio Web Audio API, UI neon glow | `-` |
+| **v0.3.0** | 2026-10-24 | AI | Implementasi Gravity Snake lengkap di index.html (8 blok AGENTS.md), LocalStorage leaderboard, audio Web Audio API, UI neon glow, deployment GitHub Pages | `-` |
 | **v0.2.2** | 2026-10-24 | AI | Menambahkan panduan alur integrasi khusus Google AI Studio & penegasan repo wajib Public | `07475fb` |
 | **v0.2.1** | 2026-10-24 | AI | Menambahkan panduan detail aktivasi GitHub Pages (CLI gh api & Web UI visual) serta troubleshooting | `3aaf671` |
 | **v0.2.0** | 2026-10-24 | AI | Konfigurasi ulang ke Single Model AI untuk siswa, modularisasi 8 blok kode, dan penyesuaian matriks tugas | `2954bb0` |
