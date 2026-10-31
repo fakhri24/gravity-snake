@@ -7,7 +7,7 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 ## 1. Ikhtisar Game
 
 - **Judul Game**: **Gravity Snake** — ular neon yang menyelam tanpa henti
-- **Genre**: 2D Arcade Endless Descent (dunia bergulir, grid 20×25)
+- **Genre**: 2D Arcade Endless Descent (gerak kontinu 60fps, kamera dunia)
 - **Format**: Single-File HTML (`index.html`) tanpa dependensi eksternal
 - **Platform**: Web Browser (Desktop & Mobile Responsive)
 - **Audio**: Web Audio API Sintetis
@@ -81,6 +81,16 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 - [x] Background bintang parallax sebagai penanda laju penyelaman; HUD menampilkan Skor, Kedalaman, Terbaik.
 - [x] Kontrol sentuh disederhanakan menjadi ◀ ▶ + tombol pause.
 
+### Phase 8: Gerak Kontinu & Visual Ular Baru (v0.6.0)
+- [x] Hapus gerak grid: kepala bergerak dalam piksel dengan kecepatan turun + akselerasi lateral halus (60fps).
+- [x] Kamera mengikuti kepala secara kontinu; grid, bintang, rintangan, dan makanan bergulir mulus.
+- [x] Badan ular memakai jejak (trail) sampling 4 px dengan panjang yang bertambah tiap makanan.
+- [x] Render badan sebagai rangkaian lingkaran bertaper (glow + outline + warna gradient) sehingga melengkung halus.
+- [x] Muka baru: mata + pupil mengikuti arah, kedip berkala, lidah bercabang, highlight, dan kemiringan kepala saat menggeser.
+- [x] Canvas memakai resolusi DPR (maksimal 2×) agar tajam di layar retina.
+- [x] Collision berbasis piksel: lingkaran kepala vs kotak rintangan, dengan jarak toleransi 1 px.
+- [x] Uji beban 3.000 frame tanpa error; trail tetap presisi 4 px dan pertumbuhan badan konsisten.
+
 ---
 
 ## 3. Matriks Tugas & Status Pelaksanaan
@@ -103,6 +113,9 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 | **T-13** | Generator dunia: band rintangan + makanan + pruning | Phase 7 | `DONE` | AI | Celah minimal 3 kolom, kepadatan naik tiap 120 m |
 | **T-14** | Progresi skor kedalaman & kecepatan | Phase 7 | `DONE` | AI | +1 per meter, +10 makanan, percept tiap 40 m |
 | **T-15** | Penyesuaian UI/HUD & kontrol sentuh 2 tombol | Phase 7 | `DONE` | AI | HUD Skor/Dalam/Terbaik, ◀ ▶ + pause |
+| **T-16** | Gerak kontinu berbasis piksel + kamera halus | Phase 8 | `DONE` | AI | 60fps, glide akselerasi lateral, tanpa snap grid |
+| **T-17** | Badan ular berbasis trail + taper + glow | Phase 8 | `DONE` | AI | Sampling 4 px, panjang tumbuh per makanan |
+| **T-18** | Muka ular baru (mata, pupil, kedip, lidah) | Phase 8 | `DONE` | AI | Ditambah DPR 2× agar tajam |
 
 *Status: `TODO` | `IN-PROGRESS` | `DONE`*
 
@@ -112,6 +125,7 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 
 | Versi | Tanggal | Pelaksana | Ringkasan Perubahan | Referensi Commit |
 | :--- | :--- | :--- | :--- | :--- |
+| **v0.6.0** | 2026-10-31 | AI | Gerak kontinu 60fps (fisika piksel + akselerasi lateral), badan ular berbasis trail dengan taper dan glow, kamera & grid mulus, muka baru (mata/pupil/kedip/lidah), canvas DPR 2× | `-` |
 | **v0.5.0** | 2026-10-31 | AI | Redesign ke Endless Descent: kamera dunia, glide kiri/kanan, generator band rintangan + makanan, skor kedalaman, HUD baru, kontrol 2 tombol, game over hanya rintangan/badan | `d71bf02` |
 | **v0.4.0** | 2026-10-31 | AI | Poles mekanik & UX: step terpadu (horizontal/gravitasi/thrust), loop delta time tunggal, pause lengkap + auto-pause, kontrol sentuh lengkap, feedback peringkat Game Over, skor terbaik dari leaderboard, partikel + screen shake, hardening LocalStorage | `2beb8e8` |
 | **v0.3.0** | 2026-10-24 | AI | Implementasi Gravity Snake lengkap di index.html (8 blok AGENTS.md), LocalStorage leaderboard, audio Web Audio API, UI neon glow, deployment GitHub Pages | `-` |
@@ -122,16 +136,17 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 
 ---
 
-## 5. Aturan Main (v0.5.0)
+## 5. Aturan Main (v0.6.0)
 
 | Aspek | Aturan |
 | :--- | :--- |
 | Kontrol | ←/→ atau A/D (tahan) untuk menggeser; Esc/P atau tombol HUD untuk pause |
-| Gerak | Ular selalu turun 1 sel per 300 ms; tidak ada kontrol naik |
-| Glide | Selama menggeser, laju turun menjadi 0,55× (turun lebih lambat) |
-| Makanan | +10 skor, +1 panjang, selalu lahir di bawah kepala |
-| Kedalaman | +1 skor per meter (1 sel); kecepatan naik tiap 40 m (maks. 150 ms/sel) |
-| Rintangan | Band blok merah dengan celah minimal 3 kolom; makin dalam makin rapat |
-| Game over | Kepala menabrak rintangan atau badan sendiri |
-| Horizontal | Wrap: keluar kanan muncul di kiri, dan sebaliknya |
+| Gerak | Ular selalu turun ±82 px/detik (naik bertahap sampai 190 px/detik); tidak ada kontrol naik |
+| Glide | Selama menggeser, laju turun menjadi 0,6× (turun lebih lambat) |
+| Makanan | +10 skor, +28 px panjang badan, selalu lahir di bawah kepala |
+| Kedalaman | +1 skor per meter (20 px); kecepatan naik tiap 40 m |
+| Badan | Mengikuti jejak kepala (sampling 4 px), melengkung mulus dan mengecil di ekor |
+| Rintangan | Band blok merah dengan celah minimal 4 kolom; makin dalam makin rapat |
+| Game over | Kepala menabrak rintangan (badan sendiri tidak mematikan) |
+| Horizontal | Dibatasi di tepi kiri/kanan (tidak wrap) |
 | Peringkat | Top 10 berdasarkan skor, tersimpan di `arcade_leaderboard` |
