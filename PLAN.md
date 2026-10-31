@@ -6,7 +6,7 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 
 ## 1. Ikhtisar Game
 
-- **Judul Game**: *(Menunggu sesi brainstorming ide game bersama siswa)*
+- **Judul Game**: **Gravity Snake** — ular neon yang terus ditarik gravitasi
 - **Genre**: 2D Arcade Game
 - **Format**: Single-File HTML (`index.html`) tanpa dependensi eksternal
 - **Platform**: Web Browser (Desktop & Mobile Responsive)
@@ -44,19 +44,31 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 - [x] Karakter pemain (pergerakan dengan gravitasi dan batas layar).
 - [x] Makanan (spawn acak, pertambahan panjang & skor).
 - [x] Deteksi tabrakan (dinding, badan sendiri, jatuh karena gravitasi) dan perhitungan skor.
+- [x] Pergerakan terpadu: horizontal, gravitasi, dan manuver naik/turun lewat satu fungsi `stepSnake()` (tidak ada mutasi ganda).
+- [x] Thrust naik/turun dengan cooldown; menekan atas benar-benar mengangkat ular, bukan sekadar membatalkan gravitasi.
+- [x] Anti belokan 180° beruntun dan tabrakan ekor yang adil (sel ekor yang akan ditinggalkan tidak dihitung).
+- [x] Game loop berbasis delta time (`dt`) dengan satu loop permanen (tidak ada loop ganda saat resume/restart).
 
 ### Phase 4: Efek Suara & Visual Juice
 - [x] Efek suara arcade sintetis dengan Web Audio API (Start, Makan, Naik, Game Over, Menu).
-- [ ] Efek ledakan partikel sederhana saat tabrakan/poin didapat.
-- [ ] Efek getar layar (screen shake) saat game over.
+- [x] Efek ledakan partikel sederhana saat makan dan game over.
+- [x] Efek getar layar (screen shake) saat makan bonus dan game over.
 
 ### Phase 5: Publikasi GitHub Pages
 - [x] Inisialisasi git dan branch `main`.
 - [x] Buat repository GitHub publik via GitHub CLI (`gh repo create gravity-snake --public --source=. --remote=origin --push`).
 - [x] Aktifkan GitHub Pages via CLI `gh api` (branch `main`, path `/`).
 - [x] Live demo: https://fakhri24.github.io/gravity-snake/
-- [ ] Pantau status workflow build di tab Actions (`gh run list`).
-- [ ] Tes live demo dan verifikasi zero-cache setelah build selesai.
+- [x] Pantau status workflow build di tab Actions (`gh run list`).
+- [x] Tes live demo dan verifikasi zero-cache setelah build selesai.
+
+### Phase 6: Poles Kontrol & Ketahanan Data
+- [x] Pause: tombol HUD, tombol `Esc`/`P`, dan auto-pause saat tab tidak aktif (`visibilitychange`).
+- [x] Kontrol sentuh lengkap dan simetris (▲ / ◀ ▼ ▶) plus tombol pause untuk mobile.
+- [x] Feedback peringkat di layar Game Over ("REKOR BARU!" / "Masuk peringkat #n" / "Belum masuk Top 10").
+- [x] Skor terbaik dimuat dari leaderboard saat game dibuka.
+- [x] `JSON.parse` dibungkus `try/catch` + normalisasi entri leaderboard yang rusak.
+- [x] Makanan tidak pernah muncul di badan ular atau di sel yang akan dilewati kepala.
 
 ---
 
@@ -69,8 +81,13 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 | **T-02** | Pembuatan Skeleton `index.html` & Meta Zero-Cache | Phase 1 | `DONE` | AI | 8 blok modular, Gravity Snake implementasi lengkap |
 | **T-03** | Modul Input Username & Leaderboard Top 10 | Phase 2 | `DONE` | AI | LocalStorage CRUD, anti-XSS, tabel peringkat |
 | **T-04** | Logika Pergerakan, Rintangan & Tabrakan | Phase 3 | `DONE` | AI | Gravitasi, wrap horizontal, collision dinding/badan |
-| **T-05** | Efek Suara Synth Web Audio API & Partikel | Phase 4 | `DONE` | AI | Audio sintetis (6 efek); partikel & screen shake belum |
+| **T-05** | Efek Suara Synth Web Audio API & Partikel | Phase 4 | `DONE` | AI | Audio sintetis (6 efek), partikel makan/game over, screen shake |
 | **T-06** | Deployment GitHub Pages via GitHub CLI (`gh`) | Phase 5 | `DONE` | AI | Repo: fakhri24/gravity-snake, URL: https://fakhri24.github.io/gravity-snake/ |
+| **T-07** | Perbaikan mekanik inti (step terpadu, thrust, anti-180°, ekor adil) | Phase 3 | `DONE` | AI | Satu `stepSnake()` untuk horizontal, gravitasi, dan manuver |
+| **T-08** | Game loop delta time + satu loop permanen | Phase 3 | `DONE` | AI | Kecepatan konsisten di 60/120 Hz, tidak ada loop ganda |
+| **T-09** | Pause lengkap (HUD/Esc/P, auto-pause tab hidden) & kontrol sentuh | Phase 6 | `DONE` | AI | Grid sentuh ▲ / ◀ ▼ ▶ + tombol pause |
+| **T-10** | Feedback peringkat Game Over & skor terbaik dari leaderboard | Phase 6 | `DONE` | AI | "REKOR BARU!", "Masuk peringkat #n", "Belum masuk Top 10" |
+| **T-11** | Ketahanan data LocalStorage & spawn makanan | Phase 6 | `DONE` | AI | `try/catch`, normalisasi entri, anti-spawn di badan/arah kepala |
 
 *Status: `TODO` | `IN-PROGRESS` | `DONE`*
 
@@ -80,6 +97,7 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 
 | Versi | Tanggal | Pelaksana | Ringkasan Perubahan | Referensi Commit |
 | :--- | :--- | :--- | :--- | :--- |
+| **v0.4.0** | 2026-10-31 | AI | Poles mekanik & UX: step terpadu (horizontal/gravitasi/thrust), loop delta time tunggal, pause lengkap + auto-pause, kontrol sentuh lengkap, feedback peringkat Game Over, skor terbaik dari leaderboard, partikel + screen shake, hardening LocalStorage | `-` |
 | **v0.3.0** | 2026-10-24 | AI | Implementasi Gravity Snake lengkap di index.html (8 blok AGENTS.md), LocalStorage leaderboard, audio Web Audio API, UI neon glow, deployment GitHub Pages | `-` |
 | **v0.2.2** | 2026-10-24 | AI | Menambahkan panduan alur integrasi khusus Google AI Studio & penegasan repo wajib Public | `07475fb` |
 | **v0.2.1** | 2026-10-24 | AI | Menambahkan panduan detail aktivasi GitHub Pages (CLI gh api & Web UI visual) serta troubleshooting | `3aaf671` |
