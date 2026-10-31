@@ -97,7 +97,7 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 
 | Versi | Tanggal | Pelaksana | Ringkasan Perubahan | Referensi Commit |
 | :--- | :--- | :--- | :--- | :--- |
-| **v0.4.0** | 2026-10-31 | AI | Poles mekanik & UX: step terpadu (horizontal/gravitasi/thrust), loop delta time tunggal, pause lengkap + auto-pause, kontrol sentuh lengkap, feedback peringkat Game Over, skor terbaik dari leaderboard, partikel + screen shake, hardening LocalStorage | `-` |
+| **v0.4.0** | 2026-10-31 | AI | Poles mekanik & UX: step terpadu (horizontal/gravitasi/thrust), loop delta time tunggal, pause lengkap + auto-pause, kontrol sentuh lengkap, feedback peringkat Game Over, skor terbaik dari leaderboard, partikel + screen shake, hardening LocalStorage | `2beb8e8` |
 | **v0.3.0** | 2026-10-24 | AI | Implementasi Gravity Snake lengkap di index.html (8 blok AGENTS.md), LocalStorage leaderboard, audio Web Audio API, UI neon glow, deployment GitHub Pages | `-` |
 | **v0.2.2** | 2026-10-24 | AI | Menambahkan panduan alur integrasi khusus Google AI Studio & penegasan repo wajib Public | `07475fb` |
 | **v0.2.1** | 2026-10-24 | AI | Menambahkan panduan detail aktivasi GitHub Pages (CLI gh api & Web UI visual) serta troubleshooting | `3aaf671` |
