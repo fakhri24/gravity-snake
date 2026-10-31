@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Gravity Snake — Neon Arcade</title>
+<title>Gravity Snake — Neon Descent</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -45,16 +45,16 @@
     touch-action: none;
   }
   .hud {
-    margin-top: 0.75rem;
-    font-size: 1.1rem;
+    margin-top: 0.7rem;
+    font-size: 1.05rem;
     display: flex;
-    gap: 1.5rem;
+    gap: 1.2rem;
     align-items: center;
     text-align: center;
   }
   .hud div { text-shadow: 0 0 8px #00f2ff; }
   .hint {
-    margin-top: 0.5rem;
+    margin-top: 0.4rem;
     font-size: 0.78rem;
     opacity: 0.65;
     text-align: center;
@@ -101,7 +101,7 @@
     color: #00f2ff;
     text-shadow: 0 0 15px #00f2ff;
   }
-  .overlay p { margin-bottom: 1rem; font-size: 0.95rem; opacity: 0.9; }
+  .overlay p { margin-bottom: 0.9rem; font-size: 0.95rem; opacity: 0.9; }
   .overlay .btn { font-size: 0.9rem; padding: 0.5rem 1rem; }
   .table-wrap {
     max-height: 42vh;
@@ -145,9 +145,8 @@
   #username-input:focus { outline: none; box-shadow: 0 0 12px rgba(0,242,255,0.6); }
   #touch-controls {
     display: none;
-    grid-template-columns: repeat(3, 64px);
-    grid-template-rows: 56px 56px;
-    gap: 8px;
+    grid-template-columns: repeat(2, 100px);
+    gap: 16px;
     margin-top: 0.9rem;
     justify-content: center;
     touch-action: none;
@@ -159,23 +158,21 @@
     border: 2px solid #00f2ff;
     color: #00f2ff;
     border-radius: 8px;
+    height: 62px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.4rem;
+    font-size: 1.6rem;
     touch-action: none;
     cursor: pointer;
   }
   .touch-btn:active { background: rgba(0, 242, 255, 0.3); }
-  #touch-controls [data-dir="up"] { grid-column: 2; grid-row: 1; }
-  #touch-controls [data-dir="left"] { grid-column: 1; grid-row: 2; }
-  #touch-controls [data-dir="down"] { grid-column: 2; grid-row: 2; }
-  #touch-controls [data-dir="right"] { grid-column: 3; grid-row: 2; }
   @media (hover: none), (max-width: 600px) {
     #touch-controls { display: grid; }
     h1 { font-size: 1.2rem; }
     .hint { display: none; }
     canvas { border-width: 2px; }
+    .hud { gap: 0.8rem; font-size: 0.92rem; }
   }
 </style>
 </head>
@@ -187,14 +184,15 @@
   <canvas id="gameCanvas" width="400" height="500"></canvas>
   <div class="hud">
     <div id="hud-score">Skor: 0</div>
+    <div id="hud-depth">Dalam: 0 m</div>
     <div id="hud-best">Terbaik: 0</div>
     <button class="btn btn-small" id="btn-pause" aria-label="Pause" title="Pause (Esc)">⏸</button>
   </div>
-  <p class="hint">Panah / WASD gerak • Spasi / Atas naik • Bawah turun • Esc pause</p>
+  <p class="hint">← → / A D untuk menghindar • Esc pause • Ular terus menyelam</p>
 
   <div id="menu-screen" class="overlay">
     <h2>GRAVITY SNAKE</h2>
-    <p>Tahan ular agar tidak jatuh!<br>Spasi / panah atas untuk naik, bawah untuk turun.</p>
+    <p>Ular terus menyelam! Geser kiri/kanan<br>menghindari rintangan merah &amp; ambil makanan.<br>Tidak ada rem, tidak ada jalan naik.</p>
     <label for="username-input">Nama:</label>
     <input type="text" id="username-input" maxlength="15" placeholder="Pemain" autocomplete="off" spellcheck="false">
     <div style="display:flex; gap:0.8rem; flex-wrap:wrap; justify-content:center;">
@@ -220,6 +218,7 @@
   <div id="gameover-screen" class="overlay hidden">
     <h2 style="color:#ff4444; text-shadow:0 0 15px #ff4444;">GAME OVER</h2>
     <p id="gameover-final-score">Skor Akhir: 0</p>
+    <p id="gameover-depth">Kedalaman: 0 m</p>
     <p id="gameover-note" class="rank-note"></p>
     <div style="display:flex; gap:0.6rem; flex-wrap:wrap; justify-content:center;">
       <button class="btn" id="btn-restart">Main Lagi</button>
@@ -237,9 +236,7 @@
   </div>
 
   <div id="touch-controls">
-    <div class="touch-btn" data-dir="up">▲</div>
     <div class="touch-btn" data-dir="left">◀</div>
-    <div class="touch-btn" data-dir="down">▼</div>
     <div class="touch-btn" data-dir="right">▶</div>
   </div>
 </div>
@@ -256,12 +253,16 @@ const COLS = canvas.width / GRID;
 const ROWS = canvas.height / GRID;
 
 const CONFIG = {
-  stepMs: 135,            // interval langkah horizontal
-  minStepMs: 75,
-  gravityMs: 330,         // interval jatuh karena gravitasi
-  minGravityMs: 230,
-  thrustCooldownMs: 150,  // jeda minimal antar manuver naik/turun
-  speedupEvery: 50,       // percepatan tiap kelipatan skor
+  fallMs: 300,            // interval turun 1 sel saat diam
+  minFallMs: 150,
+  glideFactor: 0.55,      // laju turun saat menggeser kiri/kanan
+  strafeMs: 110,          // interval geser 1 sel
+  targetRow: 8,           // baris layar tempat kepala selalu berada
+  startClearRows: 14,     // koridor aman di awal
+  minGap: 3,              // lebar celah minimum yang dijamin
+  speedupRows: 40,        // percepatan tiap 40 baris
+  speedupStep: 15,
+  maxObstacles: 140,
   maxDt: 50
 };
 
@@ -273,13 +274,6 @@ const STATE = {
   LEADERBOARD: 'LEADERBOARD'
 };
 let currentState = STATE.MENU;
-
-const DIRECTION = {
-  UP: { x: 0, y: -1 },
-  DOWN: { x: 0, y: 1 },
-  LEFT: { x: -1, y: 0 },
-  RIGHT: { x: 1, y: 0 }
-};
 
 /* ========================================================================
    2. AUDIO SYNTHESIS (Web Audio API)
@@ -310,7 +304,7 @@ function playTone(freq, type, duration, vol = 0.1) {
 const SFX = {
   eat:   () => playTone(880, 'square', 0.1, 0.15),
   grow:  () => playTone(1100, 'sine', 0.15, 0.12),
-  jump:  () => playTone(600, 'square', 0.08, 0.1),
+  shift: () => playTone(520, 'square', 0.05, 0.05),
   die:   () => playTone(150, 'sawtooth', 0.4, 0.2),
   start: () => playTone(440, 'square', 0.1, 0.1),
   menu:  () => playTone(300, 'sine', 0.05, 0.08)
@@ -325,20 +319,22 @@ const menuScreen = document.getElementById('menu-screen');
 const leaderboardScreen = document.getElementById('leaderboard-screen');
 const gameoverScreen = document.getElementById('gameover-screen');
 
-function handleDirection(dir) {
-  if (currentState !== STATE.PLAYING) return;
+const held = { left: false, right: false };
+let strafeDir = 0;
+let strafeAcc = 0;
 
-  if (dir === DIRECTION.UP || dir === DIRECTION.DOWN) {
-    if (thrustCd > 0) return;
-    thrustCd = CONFIG.thrustCooldownMs;
-    if (dir === DIRECTION.UP) gravityAcc = 0;
-    SFX.jump();
-    stepSnake(dir);
-    return;
-  }
+const LEFT_KEYS = ['ArrowLeft', 'a', 'A'];
+const RIGHT_KEYS = ['ArrowRight', 'd', 'D'];
 
-  if (dir.x === -moveDir.x && dir.y === -moveDir.y) return;
-  moveDir = dir;
+function refreshStrafe() {
+  strafeDir = (held.right ? 1 : 0) - (held.left ? 1 : 0);
+  if (strafeDir === 0) strafeAcc = 0;
+}
+
+function clearHeld() {
+  held.left = false;
+  held.right = false;
+  refreshStrafe();
 }
 
 window.addEventListener('keydown', (e) => {
@@ -356,13 +352,26 @@ window.addEventListener('keydown', (e) => {
   }
   if (currentState !== STATE.PLAYING) return;
 
-  switch (key) {
-    case 'ArrowUp': case 'w': case 'W': case ' ': handleDirection(DIRECTION.UP); break;
-    case 'ArrowDown': case 's': case 'S': handleDirection(DIRECTION.DOWN); break;
-    case 'ArrowLeft': case 'a': case 'A': handleDirection(DIRECTION.LEFT); break;
-    case 'ArrowRight': case 'd': case 'D': handleDirection(DIRECTION.RIGHT); break;
+  if (LEFT_KEYS.includes(key)) {
+    held.left = true;
+    refreshStrafe();
+  } else if (RIGHT_KEYS.includes(key)) {
+    held.right = true;
+    refreshStrafe();
   }
 });
+
+window.addEventListener('keyup', (e) => {
+  if (LEFT_KEYS.includes(e.key)) {
+    held.left = false;
+    refreshStrafe();
+  } else if (RIGHT_KEYS.includes(e.key)) {
+    held.right = false;
+    refreshStrafe();
+  }
+});
+
+window.addEventListener('blur', clearHeld);
 
 usernameInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') document.getElementById('btn-start').click();
@@ -412,13 +421,16 @@ document.getElementById('btn-pause-menu').addEventListener('click', () => {
 });
 
 document.querySelectorAll('.touch-btn').forEach((btn) => {
-  const dir = DIRECTION[btn.dataset.dir.toUpperCase()];
-  const fire = (e) => {
+  const side = btn.dataset.dir;
+  const press = (e) => {
     e.preventDefault();
-    handleDirection(dir);
+    held[side] = true;
+    refreshStrafe();
   };
-  btn.addEventListener('pointerdown', fire);
+  btn.addEventListener('pointerdown', press);
 });
+window.addEventListener('pointerup', clearHeld);
+window.addEventListener('pointercancel', clearHeld);
 
 function togglePause() {
   if (currentState === STATE.PLAYING) pauseGame();
@@ -428,8 +440,8 @@ function togglePause() {
 function pauseGame() {
   if (currentState !== STATE.PLAYING) return;
   currentState = STATE.PAUSED;
-  stepAcc = 0;
-  gravityAcc = 0;
+  fallAcc = 0;
+  clearHeld();
   pauseScreen.classList.remove('hidden');
   SFX.menu();
 }
@@ -449,79 +461,156 @@ document.addEventListener('visibilitychange', () => {
    4. GAME STATE & ENTITIES
    ======================================================================== */
 let snake = [];
-let food = { x: 0, y: 0 };
+let food = null;
+let obstacles = [];
+let stars = [];
+let particles = [];
 let score = 0;
 let bestScore = 0;
-
-let moveDir = DIRECTION.RIGHT;
-let stepMs = CONFIG.stepMs;
-let gravityMs = CONFIG.gravityMs;
-let stepAcc = 0;
-let gravityAcc = 0;
-let thrustCd = 0;
-
-let particles = [];
+let depth = 0;
+let cameraRow = 0;
+let fallMs = CONFIG.fallMs;
+let fallAcc = 0;
+let nextBandRow = 0;
 let shake = { time: 0, duration: 0, power: 0 };
 
 function mod(value, max) {
   return ((value % max) + max) % max;
 }
 
-function initGame() {
-  const startX = Math.floor(COLS / 2);
-  const startY = Math.floor(ROWS / 2);
-  snake = [
-    { x: startX, y: startY },
-    { x: startX - 1, y: startY },
-    { x: startX - 2, y: startY }
-  ];
-  moveDir = DIRECTION.RIGHT;
-  score = 0;
-  stepMs = CONFIG.stepMs;
-  gravityMs = CONFIG.gravityMs;
-  stepAcc = 0;
-  gravityAcc = 0;
-  thrustCd = 0;
-  particles = [];
-  shake = { time: 0, duration: 0, power: 0 };
-  updateHUD();
-  spawnFood();
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function spawnFood() {
-  const blocked = new Set(snake.map((seg) => seg.x + ',' + seg.y));
-  const ahead = {
-    x: mod(snake[0].x + moveDir.x, COLS),
-    y: snake[0].y + moveDir.y
-  };
-  blocked.add(ahead.x + ',' + ahead.y);
+function initStars() {
+  stars = [];
+  for (let i = 0; i < 70; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      size: 0.6 + Math.random() * 1.8,
+      speed: 25 + Math.random() * 120
+    });
+  }
+}
 
-  const free = [];
-  for (let y = 0; y < ROWS; y++) {
-    for (let x = 0; x < COLS; x++) {
-      if (!blocked.has(x + ',' + y)) free.push({ x, y });
+function initWorld() {
+  const startY = CONFIG.targetRow;
+  snake = [
+    { x: 10, y: startY },
+    { x: 10, y: startY - 1 },
+    { x: 10, y: startY - 2 }
+  ];
+  food = null;
+  obstacles = [];
+  particles = [];
+  score = 0;
+  depth = 0;
+  cameraRow = 0;
+  fallMs = CONFIG.fallMs;
+  fallAcc = 0;
+  nextBandRow = startY + CONFIG.startClearRows;
+  shake = { time: 0, duration: 0, power: 0 };
+  clearHeld();
+  initStars();
+  generateWorld();
+  spawnFoodAhead();
+  updateHUD();
+}
+
+function updateCamera() {
+  cameraRow = Math.max(0, snake[0].y - CONFIG.targetRow);
+}
+
+function spawnFoodAhead() {
+  if (!snake.length) return;
+  const minY = Math.max(cameraRow + 5, snake[0].y + 3);
+  const maxY = cameraRow + ROWS + 10;
+
+  for (let attempt = 0; attempt < 120; attempt++) {
+    const x = randInt(0, COLS - 1);
+    const y = randInt(minY, maxY);
+    if (snake.some((seg) => seg.x === x && seg.y === y)) continue;
+    if (obstacles.some((o) => o.x === x && o.y === y)) continue;
+    food = { x, y };
+    return;
+  }
+
+  food = { x: randInt(0, COLS - 1), y: minY };
+}
+
+function bandGap() {
+  return Math.max(4, 7 - Math.floor(depth / 100));
+}
+
+function generateBand(row) {
+  const gapStart = randInt(0, COLS - CONFIG.minGap);
+  const gapCols = new Set();
+  for (let i = 0; i < CONFIG.minGap; i++) gapCols.add(gapStart + i);
+
+  const columns = [];
+  for (let x = 0; x < COLS; x++) {
+    if (!gapCols.has(x)) columns.push(x);
+  }
+  for (let i = columns.length - 1; i > 0; i--) {
+    const j = randInt(0, i);
+    const tmp = columns[i];
+    columns[i] = columns[j];
+    columns[j] = tmp;
+  }
+
+  const count = Math.min(3, 1 + Math.floor(depth / 120));
+  const height = Math.random() < 0.35 ? 2 : 1;
+
+  for (let i = 0; i < count && i < columns.length; i++) {
+    const x = columns[i];
+    for (let h = 0; h < height; h++) {
+      const y = row + h;
+      if (food && food.x === x && food.y === y) continue;
+      if (snake.some((seg) => seg.x === x && seg.y === y)) continue;
+      obstacles.push({ x, y });
     }
   }
-  food = free.length ? free[Math.floor(Math.random() * free.length)] : { x: 0, y: 0 };
+}
+
+function pruneWorld() {
+  obstacles = obstacles.filter((o) => o.y >= cameraRow - 2);
+}
+
+function generateWorld() {
+  const limit = cameraRow + ROWS + 12;
+  while (nextBandRow < limit && obstacles.length < CONFIG.maxObstacles) {
+    generateBand(nextBandRow);
+    nextBandRow += bandGap();
+  }
+  pruneWorld();
+
+  if (currentState === STATE.PLAYING && (!food || food.y < cameraRow - 1)) {
+    spawnFoodAhead();
+  }
 }
 
 /* ========================================================================
    5. COLLISION & PHYSICS
    ======================================================================== */
-function stepSnake(dir) {
+function stepSnake(dx, dy) {
   if (currentState !== STATE.PLAYING || snake.length === 0) return false;
 
   const head = {
-    x: mod(snake[0].x + dir.x, COLS),
-    y: snake[0].y + dir.y
+    x: mod(snake[0].x + dx, COLS),
+    y: snake[0].y + dy
   };
 
-  if (head.y < 0 || head.y >= ROWS) {
+  if (snake.length > 1 && head.x === snake[1].x && head.y === snake[1].y) {
+    return false;
+  }
+
+  if (obstacles.some((o) => o.x === head.x && o.y === head.y)) {
     gameOver();
     return false;
   }
 
-  const eats = head.x === food.x && head.y === food.y;
+  const eats = food && head.x === food.x && head.y === food.y;
   const body = eats ? snake : snake.slice(0, -1);
   if (body.some((seg) => seg.x === head.x && seg.y === head.y)) {
     gameOver();
@@ -530,53 +619,68 @@ function stepSnake(dir) {
 
   snake.unshift(head);
   if (eats) {
-    onEat();
+    onEat(head);
   } else {
     snake.pop();
   }
+
+  if (dy > 0) {
+    depth++;
+    score++;
+  }
+  updateCamera();
   return true;
 }
 
-function onEat() {
+function onEat(head) {
   score += 10;
   SFX.eat();
-  spawnParticles(snake[0], '#ff00ff', 10);
-  spawnFood();
+  spawnParticles(head, '#ff00ff', 10);
+  food = null;
+  spawnFoodAhead();
   updateHUD();
+}
 
-  if (score % CONFIG.speedupEvery === 0) {
-    stepMs = Math.max(CONFIG.minStepMs, stepMs - 8);
-    gravityMs = Math.max(CONFIG.minGravityMs, gravityMs - 10);
+function onDescend() {
+  if (depth > 0 && depth % CONFIG.speedupRows === 0) {
+    fallMs = Math.max(CONFIG.minFallMs, fallMs - CONFIG.speedupStep);
     SFX.grow();
-    addShake(3, 120);
+    addShake(2.5, 120);
   }
+  updateHUD();
 }
 
 function updateGame(dt) {
-  if (thrustCd > 0) thrustCd = Math.max(0, thrustCd - dt);
+  fallAcc += dt * (strafeDir !== 0 ? CONFIG.glideFactor : 1);
 
-  stepAcc += dt;
-  gravityAcc += dt;
+  if (strafeDir !== 0) {
+    strafeAcc += dt;
+    while (currentState === STATE.PLAYING && strafeAcc >= CONFIG.strafeMs) {
+      strafeAcc -= CONFIG.strafeMs;
+      stepSnake(strafeDir, 0);
+    }
+  }
 
-  while (currentState === STATE.PLAYING && stepAcc >= stepMs) {
-    stepAcc -= stepMs;
-    stepSnake(moveDir);
+  while (currentState === STATE.PLAYING && fallAcc >= fallMs) {
+    fallAcc -= fallMs;
+    if (!stepSnake(0, 1)) break;
+    onDescend();
   }
-  while (currentState === STATE.PLAYING && gravityAcc >= gravityMs) {
-    gravityAcc -= gravityMs;
-    stepSnake(DIRECTION.DOWN);
-  }
+
+  if (currentState === STATE.PLAYING) generateWorld();
 }
 
 function gameOver() {
   if (currentState !== STATE.PLAYING) return;
   currentState = STATE.GAMEOVER;
+  clearHeld();
   SFX.die();
   addShake(12, 420);
   spawnParticles(snake[0], '#ff4444', 28);
 
   const result = saveScore(score);
   document.getElementById('gameover-final-score').textContent = 'Skor Akhir: ' + score;
+  document.getElementById('gameover-depth').textContent = 'Kedalaman: ' + depth + ' m';
 
   const note = document.getElementById('gameover-note');
   if (result.rank === null) {
@@ -679,6 +783,7 @@ function saveScore(newScore) {
 
 function updateHUD() {
   document.getElementById('hud-score').textContent = 'Skor: ' + score;
+  document.getElementById('hud-depth').textContent = 'Dalam: ' + depth + ' m';
   document.getElementById('hud-best').textContent = 'Terbaik: ' + Math.max(bestScore, score);
 }
 
@@ -719,6 +824,16 @@ function spawnParticles(cell, color, count) {
 
 function updateEffects(dt) {
   const seconds = dt / 1000;
+  const starMult = strafeDir !== 0 ? CONFIG.glideFactor : 1;
+
+  for (const s of stars) {
+    s.y -= s.speed * seconds * starMult;
+    if (s.y < -3) {
+      s.y = canvas.height + 3;
+      s.x = Math.random() * canvas.width;
+    }
+  }
+
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
     p.life -= dt;
@@ -731,7 +846,21 @@ function updateEffects(dt) {
     p.vy += 260 * seconds;
     p.vx *= 0.98;
   }
+
   if (shake.time > 0) shake.time = Math.max(0, shake.time - dt);
+}
+
+function screenY(worldY) {
+  return (worldY - cameraRow) * GRID;
+}
+
+function drawStars() {
+  ctx.fillStyle = 'rgba(120, 220, 255, 0.5)';
+  for (const s of stars) {
+    ctx.globalAlpha = 0.25 + (s.size / 2.4) * 0.5;
+    ctx.fillRect(s.x, s.y, s.size, s.size);
+  }
+  ctx.globalAlpha = 1;
 }
 
 function drawGrid() {
@@ -751,35 +880,34 @@ function drawGrid() {
   }
 }
 
-function drawSnake() {
-  snake.forEach((seg, i) => {
-    const grad = ctx.createLinearGradient(
-      seg.x * GRID, seg.y * GRID,
-      seg.x * GRID + GRID, seg.y * GRID + GRID
-    );
-    const ratio = i / snake.length;
-    grad.addColorStop(0, 'rgba(0, 255, ' + Math.floor(200 - 100 * ratio) + ', 1)');
-    grad.addColorStop(1, 'rgba(0, 150, 255, 1)');
+function drawObstacles() {
+  for (const o of obstacles) {
+    const sy = screenY(o.y);
+    if (sy < -GRID * 2 || sy > canvas.height + GRID * 2) continue;
+    const px = o.x * GRID;
 
-    ctx.fillStyle = grad;
-    ctx.shadowColor = '#00f2ff';
-    ctx.shadowBlur = i === 0 ? 15 : 8;
-    ctx.fillRect(seg.x * GRID + 1, seg.y * GRID + 1, GRID - 2, GRID - 2);
+    ctx.fillStyle = 'rgba(255, 51, 85, 0.16)';
+    ctx.fillRect(px + 1, sy + 1, GRID - 2, GRID - 2);
 
-    if (i === 0) {
-      ctx.fillStyle = '#fff';
-      ctx.shadowBlur = 0;
-      const eyeY = seg.y * GRID + 5;
-      ctx.fillRect(seg.x * GRID + 5, eyeY, 4, 4);
-      ctx.fillRect(seg.x * GRID + GRID - 9, eyeY, 4, 4);
-    }
-  });
-  ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#ff3355';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = '#ff3355';
+    ctx.shadowBlur = 12;
+    ctx.strokeRect(px + 2, sy + 2, GRID - 4, GRID - 4);
+
+    ctx.fillStyle = 'rgba(255, 51, 85, 0.55)';
+    ctx.fillRect(px + 6, sy + 6, GRID - 12, GRID - 12);
+    ctx.shadowBlur = 0;
+  }
 }
 
 function drawFood() {
+  if (!food) return;
+  const sy = screenY(food.y);
+  if (sy < -GRID * 2 || sy > canvas.height + GRID * 2) return;
+
   const cx = food.x * GRID + GRID / 2;
-  const cy = food.y * GRID + GRID / 2;
+  const cy = sy + GRID / 2;
   const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, GRID / 2);
   grad.addColorStop(0, '#ff00ff');
   grad.addColorStop(1, '#8800ff');
@@ -793,12 +921,39 @@ function drawFood() {
   ctx.shadowBlur = 0;
 }
 
+function drawSnake() {
+  snake.forEach((seg, i) => {
+    const sy = screenY(seg.y);
+    if (sy < -GRID * 2 || sy > canvas.height + GRID * 2) return;
+
+    const px = seg.x * GRID;
+    const grad = ctx.createLinearGradient(px, sy, px + GRID, sy + GRID);
+    const ratio = i / Math.max(1, snake.length);
+    grad.addColorStop(0, 'rgba(0, 255, ' + Math.floor(200 - 100 * ratio) + ', 1)');
+    grad.addColorStop(1, 'rgba(0, 150, 255, 1)');
+
+    ctx.fillStyle = grad;
+    ctx.shadowColor = '#00f2ff';
+    ctx.shadowBlur = i === 0 ? 15 : 8;
+    ctx.fillRect(px + 1, sy + 1, GRID - 2, GRID - 2);
+
+    if (i === 0) {
+      ctx.fillStyle = '#fff';
+      ctx.shadowBlur = 0;
+      ctx.fillRect(px + 5, sy + 5, 4, 4);
+      ctx.fillRect(px + GRID - 9, sy + 5, 4, 4);
+    }
+  });
+  ctx.shadowBlur = 0;
+}
+
 function drawParticles() {
-  particles.forEach((p) => {
+  for (const p of particles) {
+    const sy = p.y - cameraRow * GRID;
     ctx.globalAlpha = Math.max(0, p.life / p.total);
     ctx.fillStyle = p.color;
-    ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
-  });
+    ctx.fillRect(p.x - p.size / 2, sy - p.size / 2, p.size, p.size);
+  }
   ctx.globalAlpha = 1;
 }
 
@@ -815,7 +970,9 @@ function render() {
     );
   }
 
+  drawStars();
   drawGrid();
+  drawObstacles();
   drawFood();
   drawSnake();
   drawParticles();
@@ -882,7 +1039,7 @@ function showLeaderboard() {
 function startGame() {
   hideAllScreens();
   currentState = STATE.PLAYING;
-  initGame();
+  initWorld();
 }
 
 /* ========================================================================
@@ -902,7 +1059,7 @@ function gameLoop(now) {
   requestAnimationFrame(gameLoop);
 }
 
-initGame();
+initWorld();
 loadBestScore();
 showMenu();
 requestAnimationFrame(gameLoop);

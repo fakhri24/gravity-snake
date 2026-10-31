@@ -6,8 +6,8 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 
 ## 1. Ikhtisar Game
 
-- **Judul Game**: **Gravity Snake** — ular neon yang terus ditarik gravitasi
-- **Genre**: 2D Arcade Game
+- **Judul Game**: **Gravity Snake** — ular neon yang menyelam tanpa henti
+- **Genre**: 2D Arcade Endless Descent (dunia bergulir, grid 20×25)
 - **Format**: Single-File HTML (`index.html`) tanpa dependensi eksternal
 - **Platform**: Web Browser (Desktop & Mobile Responsive)
 - **Audio**: Web Audio API Sintetis
@@ -70,6 +70,17 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 - [x] `JSON.parse` dibungkus `try/catch` + normalisasi entri leaderboard yang rusak.
 - [x] Makanan tidak pernah muncul di badan ular atau di sel yang akan dilewati kepala.
 
+### Phase 7: Redesign — Endless Descent (v0.5.0)
+- [x] Keputusan desain: kontrol naik/turun dihapus; ular selalu turun, pemain hanya menggeser kiri/kanan.
+- [x] Kamera dunia mengikuti kepala (kepala tetap di baris layar ke-8) sehingga permainan tidak pernah berhenti di dasar.
+- [x] Glide: laju turun menjadi 0,55× selama menggeser, menciptakan trade-off kecepatan vs keamanan.
+- [x] Generator band rintangan dengan jaminan celah minimal 3 kolom dan kepadatan yang naik seiring kedalaman.
+- [x] Makanan selalu lahir di bawah kepala, diganti otomatis jika terlewat.
+- [x] Skor = 10 per makanan + 1 per meter kedalaman; kecepatan naik tiap 40 meter.
+- [x] Game over hanya karena menabrak rintangan atau badan sendiri; belokan 180° ke leher ditolak tanpa mematikan.
+- [x] Background bintang parallax sebagai penanda laju penyelaman; HUD menampilkan Skor, Kedalaman, Terbaik.
+- [x] Kontrol sentuh disederhanakan menjadi ◀ ▶ + tombol pause.
+
 ---
 
 ## 3. Matriks Tugas & Status Pelaksanaan
@@ -88,6 +99,10 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 | **T-09** | Pause lengkap (HUD/Esc/P, auto-pause tab hidden) & kontrol sentuh | Phase 6 | `DONE` | AI | Grid sentuh ▲ / ◀ ▼ ▶ + tombol pause |
 | **T-10** | Feedback peringkat Game Over & skor terbaik dari leaderboard | Phase 6 | `DONE` | AI | "REKOR BARU!", "Masuk peringkat #n", "Belum masuk Top 10" |
 | **T-11** | Ketahanan data LocalStorage & spawn makanan | Phase 6 | `DONE` | AI | `try/catch`, normalisasi entri, anti-spawn di badan/arah kepala |
+| **T-12** | Redesign mekanik menjadi Endless Descent | Phase 7 | `DONE` | AI | Hapus thrust, tambah kamera dunia + glide |
+| **T-13** | Generator dunia: band rintangan + makanan + pruning | Phase 7 | `DONE` | AI | Celah minimal 3 kolom, kepadatan naik tiap 120 m |
+| **T-14** | Progresi skor kedalaman & kecepatan | Phase 7 | `DONE` | AI | +1 per meter, +10 makanan, percept tiap 40 m |
+| **T-15** | Penyesuaian UI/HUD & kontrol sentuh 2 tombol | Phase 7 | `DONE` | AI | HUD Skor/Dalam/Terbaik, ◀ ▶ + pause |
 
 *Status: `TODO` | `IN-PROGRESS` | `DONE`*
 
@@ -97,9 +112,26 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 
 | Versi | Tanggal | Pelaksana | Ringkasan Perubahan | Referensi Commit |
 | :--- | :--- | :--- | :--- | :--- |
+| **v0.5.0** | 2026-10-31 | AI | Redesign ke Endless Descent: kamera dunia, glide kiri/kanan, generator band rintangan + makanan, skor kedalaman, HUD baru, kontrol 2 tombol, game over hanya rintangan/badan | `-` |
 | **v0.4.0** | 2026-10-31 | AI | Poles mekanik & UX: step terpadu (horizontal/gravitasi/thrust), loop delta time tunggal, pause lengkap + auto-pause, kontrol sentuh lengkap, feedback peringkat Game Over, skor terbaik dari leaderboard, partikel + screen shake, hardening LocalStorage | `2beb8e8` |
 | **v0.3.0** | 2026-10-24 | AI | Implementasi Gravity Snake lengkap di index.html (8 blok AGENTS.md), LocalStorage leaderboard, audio Web Audio API, UI neon glow, deployment GitHub Pages | `-` |
 | **v0.2.2** | 2026-10-24 | AI | Menambahkan panduan alur integrasi khusus Google AI Studio & penegasan repo wajib Public | `07475fb` |
 | **v0.2.1** | 2026-10-24 | AI | Menambahkan panduan detail aktivasi GitHub Pages (CLI gh api & Web UI visual) serta troubleshooting | `3aaf671` |
 | **v0.2.0** | 2026-10-24 | AI | Konfigurasi ulang ke Single Model AI untuk siswa, modularisasi 8 blok kode, dan penyesuaian matriks tugas | `2954bb0` |
 | **v0.1.0** | 2026-10-24 | AI | Inisialisasi awal file sistem `AGENTS.md` dan universal blueprint `PLAN.md` | `47aa88e` |
+
+---
+
+## 5. Aturan Main (v0.5.0)
+
+| Aspek | Aturan |
+| :--- | :--- |
+| Kontrol | ←/→ atau A/D (tahan) untuk menggeser; Esc/P atau tombol HUD untuk pause |
+| Gerak | Ular selalu turun 1 sel per 300 ms; tidak ada kontrol naik |
+| Glide | Selama menggeser, laju turun menjadi 0,55× (turun lebih lambat) |
+| Makanan | +10 skor, +1 panjang, selalu lahir di bawah kepala |
+| Kedalaman | +1 skor per meter (1 sel); kecepatan naik tiap 40 m (maks. 150 ms/sel) |
+| Rintangan | Band blok merah dengan celah minimal 3 kolom; makin dalam makin rapat |
+| Game over | Kepala menabrak rintangan atau badan sendiri |
+| Horizontal | Wrap: keluar kanan muncul di kiri, dan sebaliknya |
+| Peringkat | Top 10 berdasarkan skor, tersimpan di `arcade_leaderboard` |
