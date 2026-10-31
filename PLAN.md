@@ -125,7 +125,7 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 
 | Versi | Tanggal | Pelaksana | Ringkasan Perubahan | Referensi Commit |
 | :--- | :--- | :--- | :--- | :--- |
-| **v0.6.0** | 2026-10-31 | AI | Gerak kontinu 60fps (fisika piksel + akselerasi lateral), badan ular berbasis trail dengan taper dan glow, kamera & grid mulus, muka baru (mata/pupil/kedip/lidah), canvas DPR 2× | `-` |
+| **v0.6.0** | 2026-10-31 | AI | Gerak kontinu 60fps (fisika piksel + akselerasi lateral), badan ular berbasis trail dengan taper dan glow, kamera & grid mulus, muka baru (mata/pupil/kedip/lidah), canvas DPR 2× | `6e8568a` |
 | **v0.5.0** | 2026-10-31 | AI | Redesign ke Endless Descent: kamera dunia, glide kiri/kanan, generator band rintangan + makanan, skor kedalaman, HUD baru, kontrol 2 tombol, game over hanya rintangan/badan | `d71bf02` |
 | **v0.4.0** | 2026-10-31 | AI | Poles mekanik & UX: step terpadu (horizontal/gravitasi/thrust), loop delta time tunggal, pause lengkap + auto-pause, kontrol sentuh lengkap, feedback peringkat Game Over, skor terbaik dari leaderboard, partikel + screen shake, hardening LocalStorage | `2beb8e8` |
 | **v0.3.0** | 2026-10-24 | AI | Implementasi Gravity Snake lengkap di index.html (8 blok AGENTS.md), LocalStorage leaderboard, audio Web Audio API, UI neon glow, deployment GitHub Pages | `-` |
